@@ -5,6 +5,7 @@ clone()
 {
   local repo=$1
   local folder=$2
+  local ref=$3
 
   echo ''
   echo "Cloning $repo"
@@ -25,11 +26,23 @@ clone()
   fi
 
   git reset --hard
-  git pull origin main
+  if [ -z "$ref" ]; then
+      git pull origin main
+  else
+      git fetch origin
+      git checkout $ref
+  fi
   cd ..
 }
 
+get_version()
+{
+  local script=$1
+  grep -oP 'download_\w+\s+"\K[^"]+' "$script" | tail -1
+}
+
 imageMagickRepository=""
+commitId=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -40,6 +53,10 @@ while [[ $# -gt 0 ]]; do
     --imagemagick7)
       imageMagickRepository="ImageMagick"
       shift 1
+      ;;
+    --commit)
+      commitId="$2"
+      shift 2
       ;;
     *)
       echo "Unknown option: $1"
@@ -53,9 +70,13 @@ if [[ -z "$imageMagickRepository" ]]; then
   exit 1
 fi
 
-clone "$imageMagickRepository" "ImageMagick"
-clone "Configure" "Configure"
-clone "Dependencies" "Dependencies"
+clone "$imageMagickRepository" "$imageMagickRepository" "$commitId"
+
+configureVersion=$(get_version "$imageMagickRepository/.github/build/windows/download-configure.sh")
+clone "Configure" "Configure" "$configureVersion"
+
+dependenciesVersion=$(get_version "$imageMagickRepository/.github/build/windows/download-dependencies.sh")
+clone "Dependencies" "Dependencies" "$dependenciesVersion"
 
 cd Dependencies
 ./clone-dependencies.sh
