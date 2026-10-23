@@ -70,7 +70,7 @@ if [[ -z "$imageMagickRepository" ]]; then
   exit 1
 fi
 
-clone "$imageMagickRepository" "$imageMagickRepository" "$commitId"
+clone "$imageMagickRepository" "ImageMagick" "$commitId"
 
 configureVersion=$(get_version "$imageMagickRepository/.github/build/windows/download-configure.sh")
 clone "Configure" "Configure" "$configureVersion"
